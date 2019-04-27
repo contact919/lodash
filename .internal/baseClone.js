@@ -1,10 +1,9 @@
 import Stack from './Stack.js'
 import arrayEach from './arrayEach.js'
 import assignValue from './assignValue.js'
-import baseAssign from './baseAssign.js'
-import baseAssignIn from './baseAssignIn.js'
 import cloneBuffer from './cloneBuffer.js'
 import copyArray from './copyArray.js'
+import copyObject from './copyObject.js'
 import cloneArrayBuffer from './cloneArrayBuffer.js'
 import cloneDataView from './cloneDataView.js'
 import cloneRegExp from './cloneRegExp.js'
@@ -19,6 +18,7 @@ import initCloneObject from './initCloneObject.js'
 import isBuffer from '../isBuffer.js'
 import isObject from '../isObject.js'
 import keys from '../keys.js'
+import keysIn from '../keysIn.js'
 
 /** Used to compose bitmasks for cloning. */
 const CLONE_DEEP_FLAG = 1
@@ -143,7 +143,7 @@ function initCloneArray(array) {
  *
  * @private
  * @param {*} value The value to clone.
- * @param {boolean} bitmask The bitmask flags.
+ * @param {number} bitmask The bitmask flags.
  *  1 - Deep clone
  *  2 - Flatten inherited properties
  *  4 - Clone symbols
@@ -185,8 +185,8 @@ function baseClone(value, bitmask, customizer, key, object, stack) {
       result = (isFlat || isFunc) ? {} : initCloneObject(value)
       if (!isDeep) {
         return isFlat
-          ? copySymbolsIn(value, baseAssignIn(result, value))
-          : copySymbols(value, baseAssign(result, value))
+          ? copySymbolsIn(value, copyObject(value, keysIn(value), result))
+          : copySymbols(value, Object.assign(result, value))
       }
     } else {
       if (isFunc || !cloneableTags[tag]) {
@@ -214,6 +214,10 @@ function baseClone(value, bitmask, customizer, key, object, stack) {
     value.forEach((subValue) => {
       result.add(baseClone(subValue, bitmask, customizer, subValue, value, stack))
     })
+    return result
+  }
+
+  if (isTypedArray(value)) {
     return result
   }
 
